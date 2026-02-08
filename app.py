@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-# Use environment variable
+# Read OpenAI key from environment variable
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route("/")
@@ -28,6 +28,10 @@ def ask():
         )
 
         return jsonify({"reply": response.choices[0].message.content})
+
+    except openai.error.RateLimitError:
+        # Specific message for 429 quota exceeded
+        return jsonify({"reply": "OpenAI quota exceeded 😔. Please try again later or check your API plan."})
 
     except Exception as e:
         print("OpenAI Error:", e)
