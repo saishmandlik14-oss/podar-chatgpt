@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-# Read OpenAI key from environment variable
+# Use environment variable
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route("/")
@@ -18,8 +18,8 @@ def ask():
         if not user_msg:
             return jsonify({"reply": "Please type a question."})
 
-        # New OpenAI v2 syntax
-        response = openai.chat.completions.create(
+        # Old API syntax for openai==0.28.0
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are Podar ChatGPT, a helpful Class 10 school assistant."},
@@ -27,8 +27,7 @@ def ask():
             ]
         )
 
-        reply = response.choices[0].message.content
-        return jsonify({"reply": reply})
+        return jsonify({"reply": response.choices[0].message.content})
 
     except Exception as e:
         print("OpenAI Error:", e)
