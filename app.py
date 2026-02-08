@@ -4,6 +4,7 @@ import os
 
 app = Flask(__name__)
 
+# Read the API key from environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route("/")
@@ -13,8 +14,12 @@ def home():
 @app.route("/ask", methods=["POST"])
 def ask():
     try:
-        user_msg = request.json["message"]
+        user_msg = request.json.get("message", "")
 
+        if not user_msg:
+            return jsonify({"reply": "Please type a question."})
+
+        # Call OpenAI API
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -23,9 +28,14 @@ def ask():
             ]
         )
 
+        # Return the AI's reply
         return jsonify({"reply": response.choices[0].message.content})
-    except:
+
+    except Exception as e:
+        # Return error message if something fails
         return jsonify({"reply": "Error connecting AI"})
 
+# Only used if running locally
 if __name__ == "__main__":
-    app.run()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
