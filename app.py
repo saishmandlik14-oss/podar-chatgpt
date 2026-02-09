@@ -1,11 +1,15 @@
 from flask import Flask, render_template, request, jsonify
-import openai
+import requests
 import os
 
 app = Flask(__name__)
 
-# Read OpenAI key from environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+HF_API_KEY = os.getenv("HF_API_KEY")
+MODEL_URL = "https://api-inference.huggingface.co/models/google/flan-t5-base"
+
+headers = {
+    "Authorization": f"Bearer {HF_API_KEY}"
+}
 
 @app.route("/")
 def home():
@@ -13,30 +17,21 @@ def home():
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    try:
-        user_msg = request.json.get("message", "")
-        if not user_msg:
-            return jsonify({"reply": "Please type a question."})
+    user_msg = request.json.get("message", "")
+    if not user_msg:
+        return jsonify({"reply": "Ask something."})
 
-        # Old API syntax for openai==0.28.0
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are Podar ChatGPT, a helpful Class 10 school assistant."},
-                {"role": "user", "content": user_msg}
-            ]
-        )
+    payload = {
+        "inputs": f"Answer like a Class 10 teacher: {user_msg}"
+    }
 
-        return jsonify({"reply": response.choices[0].message.content})
+    response = requests.post(MODEL_URL, headers=headers, json=payload)
 
-    except openai.error.RateLimitError:
-        # Specific message for 429 quota exceeded
-        return jsonify({"reply": "OpenAI quota exceeded 😔. Please try again later or check your API plan."})
+    if response.status_code != 200:
+        return jsonify({"reply": "AI is busy, try again later."})
 
-    except Exception as e:
-        print("OpenAI Error:", e)
-        return jsonify({"reply": "Error connecting AI"})
+    data = response.json()
+    return jsonify({"reply": data[0]["generated_text"]})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run()
