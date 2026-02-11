@@ -42,7 +42,7 @@ def get_answer(user_msg):
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("chat.html")
 
 @app.route("/ask", methods=["POST"])
 def ask():
