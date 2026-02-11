@@ -1,55 +1,150 @@
-from flask import Flask, render_template, request, jsonify
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Podar ChatGPT</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-app = Flask(__name__)
-
-BOT_NAME = "Podar ChatGPT"
-
-# OFFLINE QUESTION–ANSWER DATA
-qa_data = {
-    # Normal conversation
-    "hi": "Hello 👋 I am Podar ChatGPT. How can I help you?",
-    "hello": "Hi there 😊 I am Podar ChatGPT.",
-    "how are you": "I am fine and ready to help you 📚",
-    "what is your name": "My name is Podar ChatGPT 🤖",
-    "who made you": "I was created as a school project to help students till Class 10.",
-    "thank you": "You're welcome 😊",
-    "bye": "Goodbye 👋 Have a nice day!",
-
-    # Class 1–5
-    "what is computer": "A computer is an electronic machine that helps us work and learn.",
-    "what is addition": "Addition means adding numbers together.",
-    "what is subtraction": "Subtraction means taking one number away from another.",
-
-    # Class 6–8
-    "what is photosynthesis": "Photosynthesis is the process by which plants make food using sunlight.",
-    "what is force": "Force is a push or pull that can change the shape or motion of an object.",
-    "what is noun": "A noun is the name of a person, place, animal or thing.",
-
-    # Class 9–10
-    "what is newton first law": "An object remains at rest or in motion unless acted upon by an external force.",
-    "what is democracy": "Democracy is a form of government where people elect their leaders.",
-    "what is algebra": "Algebra is a branch of mathematics that uses letters and numbers."
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f7f7f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
-def get_answer(user_msg):
-    user_msg = user_msg.lower().strip()
+.chat-container {
+    width: 100%;
+    max-width: 420px;
+    height: 90vh;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
 
-    for question, answer in qa_data.items():
-        if question in user_msg:
-            return answer
+.header {
+    background: #10a37f;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+}
 
-    return "Sorry 😔 I don't know this yet. Ask me a Class 1–10 question."
+.messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+}
 
-@app.route("/")
-def home():
-    return render_template("chat.html")
+.message {
+    max-width: 75%;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.4;
+}
 
-@app.route("/ask", methods=["POST"])
-def ask():
-    user_message = request.json.get("message", "")
-    reply = get_answer(user_message)
-    return jsonify({"reply": reply})
+.user {
+    background: #10a37f;
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 2px;
+}
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
-    
+.bot {
+    background: #e5e5ea;
+    color: black;
+    margin-right: auto;
+    border-bottom-left-radius: 2px;
+}
+
+.input-area {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+}
+
+button {
+    margin-left: 8px;
+    padding: 10px 15px;
+    background: #10a37f;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0e8f6f;
+}
+</style>
+</head>
+
+<body>
+
+<div class="chat-container">
+    <div class="header">🤖 Podar ChatGPT</div>
+
+    <div class="messages" id="chat">
+        <div class="message bot">
+            Hello 👋 I am Podar ChatGPT. Ask me anything till Class 10.
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="msg" placeholder="Type your message..." onkeydown="if(event.key==='Enter') send()">
+        <button onclick="send()">Send</button>
+    </div>
+</div>
+
+<script>
+function send() {
+    let input = document.getElementById("msg");
+    let message = input.value.trim();
+    if (!message) return;
+
+    let chat = document.getElementById("chat");
+
+    // User message
+    let userDiv = document.createElement("div");
+    userDiv.className = "message user";
+    userDiv.innerText = message;
+    chat.appendChild(userDiv);
+
+    chat.scrollTop = chat.scrollHeight;
+    input.value = "";
+
+    fetch("/ask", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: message})
+    })
+    .then(res => res.json())
+    .then(data => {
+        let botDiv = document.createElement("div");
+        botDiv.className = "message bot";
+        botDiv.innerText = data.reply;
+        chat.appendChild(botDiv);
+        chat.scrollTop = chat.scrollHeight;
+    });
+}
+</script>
+
+</body>
+</html>
