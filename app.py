@@ -1,150 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Podar ChatGPT</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+from flask import Flask, render_template, request, jsonify
 
-<style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f7f7f8;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+app = Flask(__name__)
+
+BOT_NAME = "Podar ChatGPT"
+
+# NORMAL CONVERSATION DATA
+qa_data = {
+    "hi": "Hello 👋 I am Podar ChatGPT. Nice to meet you!",
+    "hello": "Hi 😊 How can I help you today?",
+    "hey": "Hey! 👋 What’s up?",
+    "how are you": "I’m doing great 😄 Thanks for asking!",
+    "what is your name": "My name is Podar ChatGPT 🤖",
+    "who are you": "I am Podar ChatGPT, a friendly offline chatbot.",
+    "what can you do": "I can chat with you, talk politely, and keep you company 😊",
+    "good morning": "Good morning 🌞 Have a great day!",
+    "good afternoon": "Good afternoon 🌤️ Hope your day is going well!",
+    "good evening": "Good evening 🌆 How was your day?",
+    "good night": "Good night 🌙 Sleep well!",
+    "thank you": "You're welcome 😊",
+    "thanks": "Happy to help 😄",
+    "bye": "Bye 👋 Take care!",
+    "see you": "See you soon 👋",
+    "i am sad": "I’m sorry to hear that 😔 I’m here to listen.",
+    "i am happy": "That’s great 😄 I’m happy for you!",
+    "do you like me": "Of course 😊 You are nice to talk to!",
+    "are you real": "I am not human, but I am real as a chatbot 🤖",
+    "help me": "Sure! Tell me what you need help with 🙂"
 }
 
-.chat-container {
-    width: 100%;
-    max-width: 420px;
-    height: 90vh;
-    background: white;
-    display: flex;
-    flex-direction: column;
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-}
+def get_answer(user_msg):
+    user_msg = user_msg.lower().strip()
 
-.header {
-    background: #10a37f;
-    color: white;
-    padding: 15px;
-    text-align: center;
-    font-weight: bold;
-    font-size: 18px;
-}
+    for question, answer in qa_data.items():
+        if question in user_msg:
+            return answer
 
-.messages {
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
-}
+    return "😊 I’m here to chat! Say hi, ask how I am, or just talk to me."
 
-.message {
-    max-width: 75%;
-    padding: 10px 14px;
-    margin-bottom: 10px;
-    border-radius: 10px;
-    font-size: 14px;
-    line-height: 1.4;
-}
+@app.route("/")
+def home():
+    return render_template("chat.html")
 
-.user {
-    background: #10a37f;
-    color: white;
-    margin-left: auto;
-    border-bottom-right-radius: 2px;
-}
+@app.route("/ask", methods=["POST"])
+def ask():
+    user_message = request.json.get("message", "")
+    reply = get_answer(user_message)
+    return jsonify({"reply": reply})
 
-.bot {
-    background: #e5e5ea;
-    color: black;
-    margin-right: auto;
-    border-bottom-left-radius: 2px;
-}
-
-.input-area {
-    display: flex;
-    padding: 10px;
-    border-top: 1px solid #ddd;
-}
-
-input {
-    flex: 1;
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    outline: none;
-}
-
-button {
-    margin-left: 8px;
-    padding: 10px 15px;
-    background: #10a37f;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #0e8f6f;
-}
-</style>
-</head>
-
-<body>
-
-<div class="chat-container">
-    <div class="header">🤖 Podar ChatGPT</div>
-
-    <div class="messages" id="chat">
-        <div class="message bot">
-            Hello 👋 I am Podar ChatGPT. Ask me anything till Class 10.
-        </div>
-    </div>
-
-    <div class="input-area">
-        <input type="text" id="msg" placeholder="Type your message..." onkeydown="if(event.key==='Enter') send()">
-        <button onclick="send()">Send</button>
-    </div>
-</div>
-
-<script>
-function send() {
-    let input = document.getElementById("msg");
-    let message = input.value.trim();
-    if (!message) return;
-
-    let chat = document.getElementById("chat");
-
-    // User message
-    let userDiv = document.createElement("div");
-    userDiv.className = "message user";
-    userDiv.innerText = message;
-    chat.appendChild(userDiv);
-
-    chat.scrollTop = chat.scrollHeight;
-    input.value = "";
-
-    fetch("/ask", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({message: message})
-    })
-    .then(res => res.json())
-    .then(data => {
-        let botDiv = document.createElement("div");
-        botDiv.className = "message bot";
-        botDiv.innerText = data.reply;
-        chat.appendChild(botDiv);
-        chat.scrollTop = chat.scrollHeight;
-    });
-}
-</script>
-
-</body>
-</html>
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
